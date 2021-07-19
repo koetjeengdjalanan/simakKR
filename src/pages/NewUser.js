@@ -10,7 +10,14 @@ import { Gap, Input, Button, Loading } from '../components';
 import { storeData, useForm } from '../utils';
 import { showMessage, hideMessage } from 'react-native-flash-message';
 import { Fire } from '../config';
-import { addMonths, formatISO, parseISO, setDate } from 'date-fns';
+import {
+  addMonths,
+  formatISO,
+  fromUnixTime,
+  getUnixTime,
+  parseISO,
+  setDate,
+} from 'date-fns';
 
 const NewUser = ({ navigation }) => {
   const [form, setForm] = useForm({
@@ -50,11 +57,14 @@ const NewUser = ({ navigation }) => {
   };
 
   const testTambahBulan = () => {
-    const yangMauDitambah = parseISO(fromServer.date);
-    const tambahinBulannya = addMonths(yangMauDitambah, 1);
-    const diformatinTuh = formatISO(addMonths(parseISO(fromServer.date), 1), {
-      representation: 'date',
-    });
+    const serverDate = fromUnixTime(fromServer.date);
+    // console.log(serverDate);
+    // const yangMauDitambah = new Date(serverDate);
+    const tambahinBulannya = addMonths(serverDate, 1);
+    // console.log(tambahinBulannya);
+    const diformatinTuh = getUnixTime(
+      setDate(addMonths(fromServer.date, 1), 1)
+    );
     console.log(
       'awal:',
       fromServer.date,
@@ -80,7 +90,6 @@ const NewUser = ({ navigation }) => {
     Fire.auth()
       .createUserWithEmailAndPassword(form.eMail, form.passWord)
       .then((success) => {
-        setLoading(false);
         const data = {
           userName: form.userName,
           eMail: form.eMail,
@@ -90,13 +99,8 @@ const NewUser = ({ navigation }) => {
           packageName: fromServer.package_name,
           packagePrice: parseInt(fromServer.package_price),
           migrationDate: fromServer.date,
-          lastPayment: formatISO(fromServer.date),
-          nextPayment: formatISO(
-            addMonths(setDate(parseISO(fromServer.date), 1), 1),
-            {
-              representation: 'date',
-            }
-          ),
+          lastPayment: fromServer.date,
+          nextPayment: getUnixTime(setDate(addMonths(fromServer.date, 1), 1)),
         };
         Fire.database()
           .ref('users/' + success.user.uid + '/')
@@ -105,6 +109,7 @@ const NewUser = ({ navigation }) => {
         console.log('register sukses: ', success);
         setForm('reset');
         navigation.navigate('MainApp');
+        setLoading(false);
       })
       .catch((error) => {
         const errormessage = error.message;
@@ -126,7 +131,9 @@ const NewUser = ({ navigation }) => {
         <Gap height={80} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.container}>
-            <Text style={styles.title}>First Time Login</Text>
+            <TouchableOpacity onPress={testTambahBulan}>
+              <Text style={styles.title}>First Time Login</Text>
+            </TouchableOpacity>
             <Gap height="15" />
             <View style={styles.hr} />
             <Gap height="10" />

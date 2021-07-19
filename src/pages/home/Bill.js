@@ -14,26 +14,36 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { MinusIcon, PlusIcon } from '../../assets';
 import NumberFormat from 'react-number-format';
 import { Fire } from '../../config';
-import { addMonths, format, setDate } from 'date-fns';
+import {
+  addMonths,
+  addYears,
+  format,
+  getUnixTime,
+  parse,
+  parseISO,
+  setDate,
+} from 'date-fns';
+import fromUnixTime from 'date-fns/fromUnixTime';
 
 const Dashboard = () => {
   const [data, setData] = useState('');
   const [PayingNow, setPayingNow] = useState(false);
   const [Harga, setHarga] = useState(1);
+  const uidOfUser = Fire.auth().currentUser.uid;
   try {
     fetch(
-      `https://simak-kr-default-rtdb.firebaseio.com/users/${
-        Fire.auth().currentUser.uid
-      }.json`
+      `https://simak-kr-default-rtdb.firebaseio.com/users/${uidOfUser}.json`
     )
       .then((response) => response.json())
       .then((hasil) => {
         setData({
           studentName: hasil.studentName,
+          // nextYear: format(fromUnixTime(addYears(hasil.migrationDate, 1)), 'y'),
           nis: hasil.nis,
-          date: hasil.migrationDate,
-          lastDate: format(new Date(hasil.lastPayment), 'PPPP'),
-          nextDate: format(new Date(hasil.nextPayment), 'PPPP'),
+          rawNextDate: hasil.lastPayment,
+          date: format(fromUnixTime(hasil.migrationDate), 'y'),
+          lastDate: format(fromUnixTime(hasil.lastPayment), 'PPPP'),
+          nextDate: format(fromUnixTime(hasil.nextPayment), 'PPPP'),
           package: hasil.packageName,
           price: hasil.packagePrice,
         });
@@ -54,21 +64,41 @@ const Dashboard = () => {
   };
 
   const loadAPI = () => {
-    try {
-      fetch(
-        `https://simak-kr-default-rtdb.firebaseio.com/users/q7Hz9dRIHITeZvDKxcXWDqOrpaG2.json`
-      )
-        .then((response) => response.json())
-        .then((hasil) => {
-          console.log('nah ini hasil API nya: ', hasil);
-          console.log('nama depan doi: ', hasil.studentName);
-          // const fullName = `${hasil.data.first_name} ${hasil.data.last_name}`;
-          // console.log("nama depan lengkap doi: ", fullName);
-        });
-    } catch (error) {
-      console.warn(error);
-    }
+    // console.log('data', data);
+    // console.log('JS punya date Format: ', new Date());
+    // 2021-07-25T05:26:35+0000
+    // const cobaLagiDate = parse(
+    //   data.migrationDate,
+    //   "yyy-MM-dd'T'HH:mm:ss'+'SSSS",
+    //   new Date()
+    // );
+    const ads = 1626683213;
+    const cobaLagiDate = new Date(ads * 1000);
+    // const cobaLagiDate = parse(ads, 'yyy-MM-dd', new Date());
+    // console.log('cobaLagiDate', cobaLagiDate);
+    // console.log('yang satunya', new Date(1626683213 * 1000));
+    console.log(getUnixTime(parseISO(maybeNextPayment)));
+    // try {
+    //   fetch(
+    //     `https://simak-kr-default-rtdb.firebaseio.com/users/${uidOfUser}.json`
+    //   )
+    //     .then((response) => response.json())
+    //     .then((hasil) => {
+    //       console.log('nah ini hasil API nya: ', hasil);
+    //       console.log('nama depan doi: ', hasil.studentName);
+    //       // const fullName = `${hasil.data.first_name} ${hasil.data.last_name}`;
+    //       // console.log("nama depan lengkap doi: ", fullName);
+    //     });
+    // } catch (error) {
+    //   console.warn(error);
+    // }
   };
+
+  const nextYear = parseInt(data.date) + 1;
+  const maybeNextPayment = format(
+    addMonths(fromUnixTime(data.rawNextDate), Harga),
+    'PPPP'
+  );
 
   const rupiah = Harga * data.price;
   // const dateToSend = format(
@@ -80,7 +110,7 @@ const Dashboard = () => {
     <>
       <Modal transparent={true} visible={PayingNow}>
         <View style={styles.wrapper}>
-          <PayNow amount={rupiah} date={data.lastDate} qty={Harga} />
+          <PayNow amount={rupiah} date={maybeNextPayment} qty={Harga} />
           <TouchableOpacity
             style={styles.exit}
             onPress={() => setPayingNow(false)}
@@ -104,6 +134,7 @@ const Dashboard = () => {
                   <PaymentCard
                     name={data.studentName}
                     date={data.date}
+                    nextYear={nextYear}
                     id={data.nis}
                   />
                 </View>
