@@ -124,7 +124,15 @@ const Router = () => {
         component={Login}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Register" component={Register} />
+      <Stack.Screen
+        name="Register"
+        component={Register}
+        options={{
+          headerStyle: {
+            backgroundColor: "#3cafe0",
+          },
+        }}
+      />
       <Stack.Screen
         name="MainApp"
         component={MainApp}

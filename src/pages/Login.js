@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, Image, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ScrollView,
+  SnapshotViewIOS,
+} from "react-native";
 import { Input, Link, Button, Gap, Loading, FirstTime } from "../components";
 import { Fire } from "../config";
 import { storeData, useForm } from "../utils";
@@ -13,6 +20,8 @@ const Login = ({ navigation }) => {
 
   const [loading, setLoading] = useState(false);
   const [firstTime, setFirstTime] = useState(false);
+  const [mailOnFireBase, setMailOnFireBase] = useState(null);
+  const [mailOnMainServer, setMailOnMainServer] = useState(null);
 
   const onContinue = () => {
     console.log("Hasil Login", form);
@@ -36,7 +45,7 @@ const Login = ({ navigation }) => {
       })
       .catch((err) => {
         console.log("error: ", err);
-        const errormessage = err.message;
+        const errormessage = `${err.message} or try First Time?`;
         showMessage({
           message: errormessage,
           type: "default",
@@ -46,6 +55,7 @@ const Login = ({ navigation }) => {
         setLoading(false);
       });
   };
+
   return (
     <>
       <View style={styles.page}>

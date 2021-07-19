@@ -6,8 +6,9 @@ import * as ImagePicker from "expo-image-picker";
 import { showMessage, hideMessage } from "react-native-flash-message";
 import { Fire } from "../../config";
 import { formatISO } from "date-fns";
+import NumberFormat from "react-number-format";
 
-const PayNow = ({ amount, date }) => {
+const PayNow = ({ amount, date, qty }) => {
   //   const getImage = () => {
   //     launchImageLibrary({}, (callback) => {
   //       console.log("callback: ", callback);
@@ -16,6 +17,7 @@ const PayNow = ({ amount, date }) => {
   const dateTime = formatISO(new Date());
   const userUID = Fire.auth().currentUser.uid;
 
+  const [uploaded, setUploaded] = useState(false);
   const [photo, setPhoto] = useState(null);
   const [photoForDB, setPhotoForDB] = useState("");
   useEffect(() => {
@@ -51,9 +53,17 @@ const PayNow = ({ amount, date }) => {
     }
   };
   const upload = () => {
+    setUploaded(true);
     Fire.database()
-      .ref("users/" + userUID + "/invoice/" + dateTime + "/")
-      .update({ photoForDB });
+      .ref("invoice/" + dateTime + "/")
+      .update({
+        photoForDB,
+        qty,
+        amount,
+        status: "pending",
+        dateTime,
+        userUID,
+      });
   };
   const warning = () => {
     console.log(dateTime, userUID);
@@ -66,39 +76,51 @@ const PayNow = ({ amount, date }) => {
   };
 
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.Content}>
-        <View>
-          <Text style={styles.title}>Payment Details</Text>
-          <Text style={styles.detail}>
-            Amount to be paid: {amount} {"\n"}
-            Next Payment: {date}
-          </Text>
-        </View>
-        <Gap height="5" />
-        {!photo && (
-          <>
-            <TouchableOpacity onPress={pickImage}>
-              <File width="38" height="51" fill="grey" />
-            </TouchableOpacity>
-            <Gap height="5" />
-            <Button title="   Upload Payment Reciept   " onPress={warning} />
-          </>
-        )}
-        {photo && (
-          <>
-            <TouchableOpacity onPress={pickImage}>
-              <Image
-                style={{ height: 75, width: 65 }}
-                source={{ uri: photo }}
-              />
-            </TouchableOpacity>
-            <Gap height="5" />
-            <Button title="   Upload Payment Reciept   " onPress={upload} />
-          </>
-        )}
+    // <View style={styles.wrapper}>
+    <View style={styles.Content}>
+      <View>
+        <Text style={styles.title}>Payment Details</Text>
+        <NumberFormat
+          value={amount}
+          displayType={"text"}
+          thousandSeparator={true}
+          prefix={"Rp"}
+          renderText={(value) => (
+            <Text style={styles.detail}>
+              Amount to be paid: {value} {"\n"}
+              Next Payment: {date}
+            </Text>
+          )}
+        />
       </View>
+      <Gap height="5" />
+      {!photo && (
+        <>
+          <TouchableOpacity onPress={pickImage}>
+            <File width="38" height="51" fill="grey" />
+          </TouchableOpacity>
+          <Gap height="5" />
+          <Button title="   Upload Payment Reciept   " onPress={warning} />
+          <Gap height="15" />
+        </>
+      )}
+      {photo && (
+        <>
+          <TouchableOpacity onPress={pickImage}>
+            <Image style={{ height: 75, width: 65 }} source={{ uri: photo }} />
+          </TouchableOpacity>
+          <Gap height="5" />
+          {!uploaded && (
+            <Button title="   Upload Payment Reciept   " onPress={upload} />
+          )}
+          {uploaded && (
+            <Text style={styles.nonactive}> Payment Reciept Uploaded </Text>
+          )}
+          <Gap height="15" />
+        </>
+      )}
     </View>
+    // </View>
   );
 };
 
@@ -132,5 +154,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "black",
     fontWeight: "800",
+  },
+  nonactive: {
+    backgroundColor: "#aed9e8",
+    color: "white",
+    paddingVertical: 10,
+    borderRadius: 10,
   },
 });

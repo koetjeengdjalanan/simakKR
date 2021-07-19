@@ -4,16 +4,16 @@ import { LowPolyBG } from "../../assets/vector";
 
 const img_BG = require("../../assets/illustration/LpBG.png");
 
-const PaymentCard = () => {
+const PaymentCard = ({ name, date, id }) => {
   return (
     <View style={styles.main}>
       <View style={styles.top_container}>
         <ImageBackground source={img_BG} style={styles.top}>
-          <Text style={styles.name}>Ulla Kirgan</Text>
+          <Text style={styles.name}>{name}</Text>
         </ImageBackground>
       </View>
       <View style={styles.bottom}>
-        <Text>{"Academic Year Of 2021\nID Number : 321.32165465-48"}</Text>
+        <Text>{`Academic Year Of ${date}\nID Number : ${id}`}</Text>
       </View>
     </View>
   );
