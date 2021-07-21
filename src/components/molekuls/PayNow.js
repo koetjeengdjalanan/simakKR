@@ -1,32 +1,38 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
-import { File, Logo } from "../../assets";
-import { Button, Gap } from "../atoms";
-import * as ImagePicker from "expo-image-picker";
-import { showMessage, hideMessage } from "react-native-flash-message";
-import { Fire } from "../../config";
-import { formatISO } from "date-fns";
-import NumberFormat from "react-number-format";
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { File, Logo } from '../../assets';
+import { Button, Gap } from '../atoms';
+import * as ImagePicker from 'expo-image-picker';
+import { showMessage, hideMessage } from 'react-native-flash-message';
+import { Fire } from '../../config';
+import { formatISO, getUnixTime, parseISO } from 'date-fns';
+import NumberFormat from 'react-number-format';
 
 const PayNow = ({ amount, date, qty }) => {
+  const [dateTimeExist, setDateTimeExist] = useState(false);
+  const [timeStamp, setTimeStamp] = useState('');
+  const [dateTime, setDateTime] = useState('');
   //   const getImage = () => {
   //     launchImageLibrary({}, (callback) => {
   //       console.log("callback: ", callback);
   //     });
   //   };
-  const dateTime = formatISO(new Date());
-  const userUID = Fire.auth().currentUser.uid;
-
+  // if (!dateTimeExist) {
+  //   setTimeStamp(formatISO(new Date()));
+  //   setDateTime(getUnixTime(timeStamp) * 1000);
+  //   setDateTimeExist(true);
+  // }
+  // const userUID = Fire.auth().currentUser.uid;
   const [uploaded, setUploaded] = useState(false);
   const [photo, setPhoto] = useState(null);
-  const [photoForDB, setPhotoForDB] = useState("");
+  const [photoForDB, setPhotoForDB] = useState('');
   useEffect(() => {
     (async () => {
-      if (Platform.OS !== "web") {
+      if (Platform.OS !== 'web') {
         const { status } =
           await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-          alert("Sorry, we need camera roll permissions to make this work!");
+        if (status !== 'granted') {
+          alert('Sorry, we need camera roll permissions to make this work!');
         }
       }
     })();
@@ -40,38 +46,39 @@ const PayNow = ({ amount, date, qty }) => {
     console.log(result);
     if (result.cancelled) {
       showMessage({
-        message: "Please Pick your payment reciept by clicking icon above",
-        type: "default",
-        backgroundColor: "#E06379",
-        COLOR: "white",
+        message: 'Please Pick your payment reciept by clicking icon above',
+        type: 'default',
+        backgroundColor: '#E06379',
+        COLOR: 'white',
       });
     } else if (!result.cancelled) {
-      console.log("Coba Lihat ini: ", { uri: result.uri });
+      console.log('Coba Lihat ini: ', { uri: result.uri });
       setPhoto(result.uri);
       setPhotoForDB(`data:${result.type};base64, ${result.base64}`);
-      console.log("setPhotoForDB: ", photoForDB);
+      console.log('setPhotoForDB: ', photoForDB);
     }
   };
   const upload = () => {
     setUploaded(true);
     Fire.database()
-      .ref("invoice/" + dateTime + "/")
+      .ref('invoice/' + formatISO(new Date()) + '/')
       .update({
         photoForDB,
         qty,
         amount,
-        status: "pending",
-        dateTime,
-        userUID,
+        status: 'pending',
+        dateTime: formatISO(new Date()),
+        unixDateTime: getUnixTime(new Date()) * 1000,
+        userUID: Fire.auth().currentUser.uid,
       });
   };
   const warning = () => {
-    console.log(dateTime, userUID);
+    console.log(dateTime, Fire.auth().currentUser.uid);
     showMessage({
-      message: "Please Pick image by clicking icon above",
-      type: "default",
-      backgroundColor: "#E06379",
-      COLOR: "white",
+      message: 'Please Pick image by clicking icon above',
+      type: 'default',
+      backgroundColor: '#E06379',
+      COLOR: 'white',
     });
   };
 
@@ -82,12 +89,12 @@ const PayNow = ({ amount, date, qty }) => {
         <Text style={styles.title}>Payment Details</Text>
         <NumberFormat
           value={amount}
-          displayType={"text"}
+          displayType={'text'}
           thousandSeparator={true}
-          prefix={"Rp"}
+          prefix={'Rp'}
           renderText={(value) => (
             <Text style={styles.detail}>
-              Amount to be paid: {value} {"\n"}
+              Amount to be paid: {value} {'\n'}
               Next Payment: {date}
             </Text>
           )}
@@ -129,35 +136,35 @@ export default PayNow;
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    position: "absolute",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.50)",
-    width: "100%",
-    height: "100%",
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.50)',
+    width: '100%',
+    height: '100%',
   },
   Content: {
     borderRadius: 15,
     padding: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "white",
-    width: "auto",
-    height: "auto",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    width: 'auto',
+    height: 'auto',
   },
   detail: {
     fontSize: 16,
-    color: "black",
-    fontWeight: "normal",
+    color: 'black',
+    fontWeight: 'normal',
   },
   title: {
     fontSize: 24,
-    color: "black",
-    fontWeight: "800",
+    color: 'black',
+    fontWeight: '800',
   },
   nonactive: {
-    backgroundColor: "#aed9e8",
-    color: "white",
+    backgroundColor: '#aed9e8',
+    color: 'white',
     paddingVertical: 10,
     borderRadius: 10,
   },

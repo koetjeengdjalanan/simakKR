@@ -17,6 +17,7 @@ import {
   getUnixTime,
   parseISO,
   setDate,
+  format,
 } from 'date-fns';
 
 const NewUser = ({ navigation }) => {
@@ -57,21 +58,20 @@ const NewUser = ({ navigation }) => {
   };
 
   const testTambahBulan = () => {
-    const serverDate = fromUnixTime(fromServer.date);
+    const serverDate = formatISO(fromServer.date);
     // console.log(serverDate);
     // const yangMauDitambah = new Date(serverDate);
-    const tambahinBulannya = addMonths(serverDate, 1);
+    // const tambahinBulannya = addMonths(serverDate, 1);
     // console.log(tambahinBulannya);
-    const diformatinTuh = getUnixTime(
-      setDate(addMonths(fromServer.date, 1), 1)
-    );
+    const diformatinTuh =
+      getUnixTime(setDate(addMonths(fromServer.date, 1), 1)) * 1000;
     console.log(
       'awal:',
-      fromServer.date,
+      serverDate,
       '| ditambah:',
-      tambahinBulannya,
+      setDate(addMonths(fromServer.date, 1), 1),
       '| diFormatin:',
-      diformatinTuh
+      formatISO(diformatinTuh)
     );
   };
 
@@ -100,7 +100,9 @@ const NewUser = ({ navigation }) => {
           packagePrice: parseInt(fromServer.package_price),
           migrationDate: fromServer.date,
           lastPayment: fromServer.date,
-          nextPayment: getUnixTime(setDate(addMonths(fromServer.date, 1), 1)),
+          nextPayment:
+            getUnixTime(setDate(addMonths(fromServer.date, 1), 1)) * 1000,
+          uid: success.user.uid,
         };
         Fire.database()
           .ref('users/' + success.user.uid + '/')

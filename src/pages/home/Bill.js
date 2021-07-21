@@ -29,28 +29,34 @@ const Dashboard = () => {
   const [data, setData] = useState('');
   const [PayingNow, setPayingNow] = useState(false);
   const [Harga, setHarga] = useState(1);
-  const uidOfUser = Fire.auth().currentUser.uid;
-  try {
-    fetch(
-      `https://simak-kr-default-rtdb.firebaseio.com/users/${uidOfUser}.json`
-    )
-      .then((response) => response.json())
-      .then((hasil) => {
-        setData({
-          studentName: hasil.studentName,
-          // nextYear: format(fromUnixTime(addYears(hasil.migrationDate, 1)), 'y'),
-          nis: hasil.nis,
-          rawNextDate: hasil.lastPayment,
-          date: format(fromUnixTime(hasil.migrationDate), 'y'),
-          lastDate: format(fromUnixTime(hasil.lastPayment), 'PPPP'),
-          nextDate: format(fromUnixTime(hasil.nextPayment), 'PPPP'),
-          package: hasil.packageName,
-          price: hasil.packagePrice,
+  // const uidOfUser = Fire.auth().currentUser.uid;
+  const [fetchAlready, setFetchAlready] = useState(false);
+  if (!fetchAlready) {
+    try {
+      fetch(
+        `https://simak-kr-default-rtdb.firebaseio.com/users/${
+          Fire.auth().currentUser.uid
+        }.json`
+      )
+        .then((response) => response.json())
+        .then((hasil) => {
+          setData({
+            studentName: hasil.studentName,
+            // nextYear: format(fromUnixTime(addYears(hasil.migrationDate, 1)), 'y'),
+            nis: hasil.nis,
+            rawNextDate: hasil.lastPayment,
+            date: format(fromUnixTime(hasil.migrationDate / 1000), 'y'),
+            lastDate: format(fromUnixTime(hasil.lastPayment / 1000), 'PPPP'),
+            nextDate: format(fromUnixTime(hasil.nextPayment / 1000), 'PPPP'),
+            package: hasil.packageName,
+            price: hasil.packagePrice,
+          });
+          // console.log(data);
         });
-        // console.log(data);
-      });
-  } catch (error) {
-    console.warn(error);
+      setFetchAlready(true);
+    } catch (error) {
+      console.warn(error);
+    }
   }
   const addMonth = () => {
     const Tambahin = Harga + 1;
@@ -72,12 +78,14 @@ const Dashboard = () => {
     //   "yyy-MM-dd'T'HH:mm:ss'+'SSSS",
     //   new Date()
     // );
-    const ads = 1626683213;
-    const cobaLagiDate = new Date(ads * 1000);
+    // const ads = 1626683213;
+    // const cobaLagiDate = new Date(ads * 1000);
     // const cobaLagiDate = parse(ads, 'yyy-MM-dd', new Date());
     // console.log('cobaLagiDate', cobaLagiDate);
     // console.log('yang satunya', new Date(1626683213 * 1000));
-    console.log(getUnixTime(parseISO(maybeNextPayment)));
+    // console.log(getUnixTime(parseISO(maybeNextPayment)));
+    console.log(data);
+    console.log(nextYear, data.date);
     // try {
     //   fetch(
     //     `https://simak-kr-default-rtdb.firebaseio.com/users/${uidOfUser}.json`
@@ -95,10 +103,10 @@ const Dashboard = () => {
   };
 
   const nextYear = parseInt(data.date) + 1;
-  const maybeNextPayment = format(
-    addMonths(fromUnixTime(data.rawNextDate), Harga),
-    'PPPP'
-  );
+  // const maybeNextPayment = format(
+  //   addMonths(fromUnixTime(data.rawNextDate), Harga) * 1000,
+  //   'PPPP'
+  // );
 
   const rupiah = Harga * data.price;
   // const dateToSend = format(
@@ -110,7 +118,7 @@ const Dashboard = () => {
     <>
       <Modal transparent={true} visible={PayingNow}>
         <View style={styles.wrapper}>
-          <PayNow amount={rupiah} date={maybeNextPayment} qty={Harga} />
+          <PayNow amount={rupiah} date={data.nextDate} qty={Harga} />
           <TouchableOpacity
             style={styles.exit}
             onPress={() => setPayingNow(false)}
